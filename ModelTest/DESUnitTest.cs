@@ -4,7 +4,7 @@ using Newtonsoft.Json.Bson;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using System.Text;
 
-namespace ModelTest
+namespace DESTest
 {
     public class DESUnitTest
     {
