@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static Model.Values;
@@ -271,6 +272,12 @@ namespace Model
 
         }
 
+        public void setKey(byte[] newKey)
+        {
+            this.key = newKey;
+            generateSubKeys();
+        }
+
         public byte[] getMsg()
         {
             return msg;
@@ -281,9 +288,18 @@ namespace Model
             return key;
         }
 
+        public byte[] GenerateRandomDESKey()
+        {
+            byte[] randomKey = new byte[8]; // DES używa 64 bitów (8 bajtów)
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(randomKey);
+            }
+            return randomKey;
+        }
         public void generateDefaultMessageAndKey()
         {
-            key = Encoding.ASCII.GetBytes("12345678");
+            key = GenerateRandomDESKey();
             msg = Encoding.ASCII.GetBytes("abcdefgh");
         }
     }

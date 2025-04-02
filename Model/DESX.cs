@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static Model.DES;
@@ -18,7 +19,7 @@ namespace Model
         {
             des = new DES();
             msg = des.getMsg();
-            generateDefaultKeys();
+            generateRandomKeys();
         }
 
         public void generateDefaultKeys()
@@ -27,6 +28,31 @@ namespace Model
             keySecond = Encoding.ASCII.GetBytes("asdfghjk");
         }
 
+        public byte[] generateRandomBytes(int length)
+        {
+            byte[] randomBytes = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            return randomBytes;
+        }
+
+        public void generateRandomKeys()
+        {
+            // Dla DESX potrzebujemy dwóch 8-bajtowych kluczy
+            keyFirst = generateRandomBytes(8);
+            keySecond = generateRandomBytes(8);
+        }
+        public void setKeys(byte[] keyX1, byte[] desKey, byte[] keyX2)
+        {
+            // Ustawienie dodatkowych kluczy DESX
+            this.keyFirst = keyX1;
+            this.keySecond = keyX2;
+
+            // Ustawienie klucza DES
+            des.setKey(desKey);
+        }
         public byte[] getKeyFirst()
         {
             return keyFirst;
@@ -47,6 +73,12 @@ namespace Model
             des.setMsg(msg);
             this.msg = des.getMsg();
         }
+        public void setMsg(byte[] msg)
+        {
+            // Zakładamy, że wewnętrzny obiekt DES posiada metodę setMsg(byte[])
+            des.setMsg(msg);
+            this.msg = des.getMsg();
+        }
 
         public void prepareMsgPackages()
         {
@@ -54,7 +86,7 @@ namespace Model
             msgPackage = new byte[msgPartsNumb][];
             for (int i = 0; i < msgPartsNumb; i++)
             {
-                msgPackage[i] = des.splitBytes(msg, i * 8, 64);
+                msgPackage[i] = des.splitBytes(msg, i * 8*8, 64);
             }
         }
 
@@ -65,7 +97,7 @@ namespace Model
             {
                 for (int i = 1; i < msgPackage.Length; i++)
                 {
-                    msg = des.concatenateBytes(msg, msg.Length,msgPackage[i], msgPackage[i].Length*8);
+                    msg = des.concatenateBytes(msg, msg.Length*8,msgPackage[i], msgPackage[i].Length*8);
                 }
             }
         }
@@ -78,7 +110,7 @@ namespace Model
                 des.setMsg(msgPackage[i]);
                 des.run(true);
                 msgPackage[i] = des.getMsg();
-                msgPackage[i] = des.doXORBytes(keySecond, msgPackage[i]);
+                msgPackage[i] = des.doXORBytes(msgPackage[i], keySecond);
             }
         }
 
@@ -90,7 +122,7 @@ namespace Model
                 des.setMsg(msgPackage[i]);
                 des.run(false);
                 msgPackage[i] = des.getMsg();
-                msgPackage[i] = des.doXORBytes(keyFirst, msgPackage[i]);
+                msgPackage[i] = des.doXORBytes(msgPackage[i], keyFirst);
             }
         }
 

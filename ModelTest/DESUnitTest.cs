@@ -192,7 +192,5 @@ namespace DESTest
 
             Assert.Equal(expectedDecryptedMsg, decryptedMsg);
         }
-
-
     }
 }

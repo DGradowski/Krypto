@@ -11,6 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelTest", "..\ModelTest\M
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "View", "..\View\View.csproj", "{938858F6-6449-46F3-9379-4850FF4996A5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4E283A49-20BA-4E49-96DD-E5BE52C4375C} = {4E283A49-20BA-4E49-96DD-E5BE52C4375C}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
