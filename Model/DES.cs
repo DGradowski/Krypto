@@ -287,19 +287,19 @@ namespace Model
         {
             return key;
         }
-
-        public byte[] GenerateRandomDESKey()
+        public byte[] generateRandomBytes(int length)
         {
-            byte[] randomKey = new byte[8]; // DES używa 64 bitów (8 bajtów)
-            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            byte[] randomBytes = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
             {
-                rng.GetBytes(randomKey);
+                rng.GetBytes(randomBytes);
             }
-            return randomKey;
+            return randomBytes;
         }
+
         public void generateDefaultMessageAndKey()
         {
-            key = GenerateRandomDESKey();
+            key = generateRandomBytes(8);
             msg = Encoding.ASCII.GetBytes("abcdefgh");
         }
     }

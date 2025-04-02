@@ -46,9 +46,6 @@ namespace DESXUI
         private Button buttonEncrypt;
         private Button buttonDecrypt;
 
-        private RadioButton radioButtonFile;
-        private RadioButton radioButtonWindow;
-
         private Label labelSavePlainFile;
         private TextBox textBoxSavePlainFile;
         private Button buttonSavePlainFile;
@@ -56,6 +53,10 @@ namespace DESXUI
         private Label labelSaveCipherFile;
         private TextBox textBoxSaveCipherFile;
         private Button buttonSaveCipherFile;
+
+        private RadioButton radioButtonTextMode;
+        private RadioButton radioButtonBinaryMode;
+        private Label labelModeInfo;
 
         // Obiekt DESX
         private DESX desx;
@@ -80,17 +81,17 @@ namespace DESXUI
             //  Inicjalizacja kontrolek (Klucze)
             // ============================
             labelKey1 = new Label { Text = "Wartość I klucza", AutoSize = true };
-            textBoxKey1 = new TextBox { Text = "0123456789ABCDEF", Width = 150 };
+            textBoxKey1 = new TextBox { Text = "", Width = 150 };
             buttonLoadKey1 = new Button { Text = "Wczytaj", Width = 60 };
             buttonSaveKey1 = new Button { Text = "Zapisz", Width = 60 };
 
             labelKey2 = new Label { Text = "Wartość II klucza", AutoSize = true };
-            textBoxKey2 = new TextBox { Text = "1133557799BBDDFF", Width = 150 };
+            textBoxKey2 = new TextBox { Text = "", Width = 150 };
             buttonLoadKey2 = new Button { Text = "Wczytaj", Width = 60 };
             buttonSaveKey2 = new Button { Text = "Zapisz", Width = 60 };
 
             labelKey3 = new Label { Text = "Wartość III klucza", AutoSize = true };
-            textBoxKey3 = new TextBox { Text = "0022446688AACCEE", Width = 150 };
+            textBoxKey3 = new TextBox { Text = "", Width = 150 };
             buttonLoadKey3 = new Button { Text = "Wczytaj", Width = 60 };
             buttonSaveKey3 = new Button { Text = "Zapisz", Width = 60 };
 
@@ -127,8 +128,15 @@ namespace DESXUI
             buttonEncrypt = new Button { Text = "<Szyfruj>", Width = 80 };
             buttonDecrypt = new Button { Text = "<Deszyfruj>", Width = 80 };
 
-            radioButtonFile = new RadioButton { Text = "Plik", AutoSize = true, Checked = true };
-            radioButtonWindow = new RadioButton { Text = "Okno", AutoSize = true };
+            radioButtonTextMode = new RadioButton { Text = "Tryb tekstowy", AutoSize = true, Checked = true };
+            radioButtonBinaryMode = new RadioButton { Text = "Tryb binarny", AutoSize = true };
+
+            labelModeInfo = new Label
+            {
+                Text = "Tryb tekstowy - tylko dla plików tekstowych. Tryb binarny - dla dowolnych plików.",
+                AutoSize = true,
+                Location = new Point(220, 273)
+            };
 
             labelSavePlainFile = new Label { Text = "Zapisz plik zawierający tekst jawny", AutoSize = true };
             textBoxSavePlainFile = new TextBox { Width = 220 };
@@ -137,6 +145,8 @@ namespace DESXUI
             labelSaveCipherFile = new Label { Text = "Zapisz plik zawierający szyfrogram", AutoSize = true };
             textBoxSaveCipherFile = new TextBox { Width = 220 };
             buttonSaveCipherFile = new Button { Text = "Zapisz", Width = 60 };
+
+            
 
             // ============================
             //  Rozmieszczenie kontrolek
@@ -183,8 +193,8 @@ namespace DESXUI
             buttonEncrypt.Location = new Point(marginLeft + 360, currentY + 40);
             buttonDecrypt.Location = new Point(marginLeft + 360, currentY + 80);
 
-            radioButtonFile.Location = new Point(marginLeft + 365, currentY + 120);
-            radioButtonWindow.Location = new Point(marginLeft + 410, currentY + 120);
+            radioButtonBinaryMode.Location = new Point(marginLeft + 365, currentY + 130);
+            radioButtonTextMode.Location = new Point(marginLeft + 365, currentY + 110);
 
             currentY += 160;
             labelSavePlainFile.Location = new Point(marginLeft, currentY);
@@ -194,6 +204,15 @@ namespace DESXUI
             labelSaveCipherFile.Location = new Point(marginLeft + 500, currentY);
             textBoxSaveCipherFile.Location = new Point(marginLeft + 700, currentY - 3);
             buttonSaveCipherFile.Location = new Point(marginLeft + 930, currentY - 5);
+
+            labelSavePlainFile.Location = new Point(marginLeft, 300);
+            textBoxSavePlainFile.Location = new Point(marginLeft + 210, 297);
+            buttonSavePlainFile.Location = new Point(marginLeft + 440, 295);
+
+            labelSaveCipherFile.Location = new Point(marginLeft + 500, 300);
+            textBoxSaveCipherFile.Location = new Point(marginLeft + 700, 297);
+            buttonSaveCipherFile.Location = new Point(marginLeft + 930, 295);
+
 
             // Dodawanie wszystkich kontrolek do okna
             this.Controls.Add(labelKey1);
@@ -227,9 +246,6 @@ namespace DESXUI
             this.Controls.Add(buttonEncrypt);
             this.Controls.Add(buttonDecrypt);
 
-            this.Controls.Add(radioButtonFile);
-            this.Controls.Add(radioButtonWindow);
-
             this.Controls.Add(labelSavePlainFile);
             this.Controls.Add(textBoxSavePlainFile);
             this.Controls.Add(buttonSavePlainFile);
@@ -237,6 +253,10 @@ namespace DESXUI
             this.Controls.Add(labelSaveCipherFile);
             this.Controls.Add(textBoxSaveCipherFile);
             this.Controls.Add(buttonSaveCipherFile);
+
+            this.Controls.Add(radioButtonTextMode);
+            this.Controls.Add(radioButtonBinaryMode);
+            this.Controls.Add(labelModeInfo);
         }
 
         private void AttachEventHandlers()
@@ -263,6 +283,22 @@ namespace DESXUI
             // Zapisywanie plików
             buttonSavePlainFile.Click += (s, e) => SaveFile(textBoxSavePlainFile, plainFileBytes);
             buttonSaveCipherFile.Click += (s, e) => SaveFile(textBoxSaveCipherFile, cipherFileBytes);
+
+            radioButtonTextMode.CheckedChanged += (s, e) => UpdateMode();
+            radioButtonBinaryMode.CheckedChanged += (s, e) => UpdateMode();
+
+            // Modyfikujemy istniejące handlersy
+            buttonEncrypt.Click += (s, e) =>
+            {
+                if (radioButtonTextMode.Checked) EncryptText();
+                else EncryptBinary();
+            };
+
+            buttonDecrypt.Click += (s, e) =>
+            {
+                if (radioButtonTextMode.Checked) DecryptText();
+                else DecryptBinary();
+            };
         }
 
         // ---------------------------
@@ -322,16 +358,76 @@ namespace DESXUI
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     pathTextBox.Text = ofd.FileName;
-                    return File.ReadAllBytes(ofd.FileName);
+                    byte[] fileBytes = File.ReadAllBytes(ofd.FileName);
+
+                    if (radioButtonTextMode.Checked)
+                    {
+                        // W trybie tekstowym pokazujemy zawartość w TextBoxie
+                        if (pathTextBox == textBoxOpenPlainFile)
+                        {
+                            textBoxPlainContent.Text = Encoding.UTF8.GetString(fileBytes);
+                            binaryPlainData = null;
+                        }
+                        else
+                        {
+                            textBoxCipherContent.Text = Encoding.UTF8.GetString(fileBytes);
+                            binaryCipherData = null;
+                        }
+                    }
+                    else
+                    {
+                        // W trybie binarnym zapisujemy dane w zmiennych
+                        if (pathTextBox == textBoxOpenPlainFile)
+                        {
+                            binaryPlainData = fileBytes;
+                            textBoxPlainContent.Text = $"[Dane binarne - rozmiar: {fileBytes.Length} bajtów]";
+                        }
+                        else
+                        {
+                            binaryCipherData = fileBytes;
+                            textBoxCipherContent.Text = $"[Dane binarne - rozmiar: {fileBytes.Length} bajtów]";
+                        }
+                    }
+
+                    return fileBytes;
                 }
             }
             return null;
         }
 
-        private void SaveFile(TextBox pathTextBox, byte[] fileBytes)
+        // Modyfikujemy istniejące metody zapisywania plików
+        private void SaveFile(TextBox pathTextBox, byte[] defaultFileBytes)
         {
-            if (fileBytes == null || fileBytes.Length == 0)
+            byte[] dataToSave = null;
+
+            if (radioButtonTextMode.Checked)
+            {
+                if (pathTextBox == textBoxSavePlainFile)
+                {
+                    dataToSave = Encoding.UTF8.GetBytes(textBoxPlainContent.Text);
+                }
+                else
+                {
+                    dataToSave = Encoding.UTF8.GetBytes(textBoxCipherContent.Text);
+                }
+            }
+            else
+            {
+                if (pathTextBox == textBoxSavePlainFile)
+                {
+                    dataToSave = binaryPlainData ?? defaultFileBytes;
+                }
+                else
+                {
+                    dataToSave = binaryCipherData ?? defaultFileBytes;
+                }
+            }
+
+            if (dataToSave == null || dataToSave.Length == 0)
+            {
+                MessageBox.Show("Brak danych do zapisania.");
                 return;
+            }
 
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
@@ -339,7 +435,8 @@ namespace DESXUI
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     pathTextBox.Text = sfd.FileName;
-                    File.WriteAllBytes(sfd.FileName, fileBytes);
+                    File.WriteAllBytes(sfd.FileName, dataToSave);
+                    MessageBox.Show("Plik został zapisany pomyślnie!");
                 }
             }
         }
@@ -427,6 +524,98 @@ namespace DESXUI
                 MessageBox.Show("Błąd podczas odszyfrowywania: " + ex.Message);
             }
         }
+        private void UpdateMode()
+        {
+            if (radioButtonTextMode.Checked)
+            {
+                textBoxPlainContent.Text = "Tu podaj tekst jawny";
+                textBoxCipherContent.Text = "Tu podaj szyfrogram";
+                textBoxPlainContent.Enabled = true;
+                textBoxCipherContent.Enabled = true;
+            }
+            else
+            {
+                textBoxPlainContent.Text = "[Dane binarne - użyj przycisku 'Otwórz']";
+                textBoxCipherContent.Text = "[Dane binarne - użyj przycisku 'Otwórz']";
+                textBoxPlainContent.Enabled = false;
+                textBoxCipherContent.Enabled = false;
+            }
+        }
+
+        // Nowe metody do obsługi trybu binarnego
+        private byte[] binaryPlainData = null;
+        private byte[] binaryCipherData = null;
+
+        private void EncryptBinary()
+        {
+            try
+            {
+                if (binaryPlainData == null || binaryPlainData.Length == 0)
+                {
+                    MessageBox.Show("Najpierw otwórz plik do zaszyfrowania.");
+                    return;
+                }
+
+                // Pobierz klucze
+                byte[] keyX1 = HexStringToByteArray(textBoxKey1.Text);
+                byte[] desKey = HexStringToByteArray(textBoxKey2.Text);
+                byte[] keyX2 = HexStringToByteArray(textBoxKey3.Text);
+
+                // Ustaw klucze w obiekcie DESX
+                desx.setKeys(keyX1, desKey, keyX2);
+
+                // Ustaw dane binarne i wykonaj szyfrowanie
+                desx.setMsg(binaryPlainData);
+                desx.prepareMsgPackages();
+                desx.run(true);
+
+                // Pobierz zaszyfrowane dane
+                binaryCipherData = desx.getMsg();
+                textBoxCipherContent.Text = $"[Zaszyfrowane dane binarne - rozmiar: {binaryCipherData.Length} bajtów]";
+
+                MessageBox.Show("Plik został zaszyfrowany pomyślnie!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Błąd podczas szyfrowania: " + ex.Message);
+            }
+        }
+
+        private void DecryptBinary()
+        {
+            try
+            {
+                if (binaryCipherData == null || binaryCipherData.Length == 0)
+                {
+                    MessageBox.Show("Najpierw otwórz plik do odszyfrowania.");
+                    return;
+                }
+
+                // Pobierz klucze
+                byte[] keyX1 = HexStringToByteArray(textBoxKey1.Text);
+                byte[] desKey = HexStringToByteArray(textBoxKey2.Text);
+                byte[] keyX2 = HexStringToByteArray(textBoxKey3.Text);
+
+                // Ustaw klucze w obiekcie DESX
+                desx.setKeys(keyX1, desKey, keyX2);
+
+                // Ustaw zaszyfrowane dane i wykonaj odszyfrowanie
+                desx.setMsg(binaryCipherData);
+                desx.prepareMsgPackages();
+                desx.run(false);
+
+                // Pobierz odszyfrowane dane
+                binaryPlainData = desx.getMsg();
+                textBoxPlainContent.Text = $"[Odszyfrowane dane binarne - rozmiar: {binaryPlainData.Length} bajtów]";
+
+                MessageBox.Show("Plik został odszyfrowany pomyślnie!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Błąd podczas odszyfrowywania: " + ex.Message);
+            }
+        }
 
     }
+
 }
