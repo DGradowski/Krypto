@@ -1,5 +1,6 @@
 ﻿using Model;
 using System;
+using System.DirectoryServices;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -517,7 +518,7 @@ namespace DESXUI
             }
             catch (FormatException)
             {
-                MessageBox.Show("Błąd konwersji Base64. Upewnij się, że szyfrogram jest poprawnie zakodowany.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                int x = 0;
             }
             catch (Exception ex)
             {
