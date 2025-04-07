@@ -1,3 +1,6 @@
+//Jakub Gawrysiak - 252935
+//Dawid Gradowski - 251524
+
 using Xunit;
 using Model;
 using Newtonsoft.Json.Bson;

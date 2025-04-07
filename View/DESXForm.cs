@@ -1,4 +1,7 @@
-﻿using Model;
+﻿//Jakub Gawrysiak - 252935
+//Dawid Gradowski - 251524
+
+using Model;
 using System;
 using System.DirectoryServices;
 using System.Drawing;

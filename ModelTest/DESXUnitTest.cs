@@ -1,4 +1,7 @@
-﻿using Xunit;
+﻿//Jakub Gawrysiak - 252935
+//Dawid Gradowski - 251524
+
+using Xunit;
 using Model;
 using Newtonsoft.Json.Bson;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
