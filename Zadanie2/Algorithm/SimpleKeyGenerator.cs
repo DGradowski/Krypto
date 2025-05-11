@@ -32,12 +32,12 @@
 
         public long[] generatePublicKey(long[] privateKey)
         {
-            long[] newPublicKey = new long[keySize];
+            long[] publicKey = new long[privateKey.Length];
             for (int i = 0; i < privateKey.Length; i++)
             {
-                newPublicKey[i] = (privateKey[i] * multiplier) % modulus;
+                publicKey[i] = (privateKey[i] * multiplier) % modulus;
             }
-            return newPublicKey;
+            return publicKey;
         }
     }
 }

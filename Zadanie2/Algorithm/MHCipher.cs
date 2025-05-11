@@ -1,105 +1,115 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace Algorithm
 {
     public class MHCipher
     {
         private SimpleKeyGenerator keyGen;
-        private long[] privateKey { get; set; }
-        private long[] publicKey { get; set; }
+        private long[] privateKey;
+        private long[] publicKey;
+        private int blockSize;
 
-        public MHCipher(SimpleKeyGenerator keyGen)
+        public MHCipher(SimpleKeyGenerator keyGen, long[] privateKey)
         {
             this.keyGen = keyGen;
-            generateKeys();
+            this.privateKey = privateKey;
+            this.publicKey = keyGen.generatePublicKey(privateKey);
+            this.blockSize = privateKey.Length;
         }
 
-        public void generateKeys()
+        public string Encrypt(string message)
         {
-            privateKey = keyGen.generateDefaultPrivateKey();
-            publicKey = keyGen.generatePublicKey(privateKey);
-        }
+            string binary = ConvertToBinary(message);
 
-        public void generatePublicKey()
-        {
-            publicKey = keyGen.generatePublicKey(privateKey);
-        }
+            while (binary.Length % blockSize != 0)
+                binary += "0";
 
-        public long[] Encrypt(string message)
-        {
-            if (string.IsNullOrEmpty(message))
-                throw new Exception("Message is empty"); 
-
-            long[] output = new long[message.Length];
-            for (int i = 0; i < message.Length; i++)
+            StringBuilder cipher = new StringBuilder();
+            for (int i = 0; i < binary.Length; i += blockSize)
             {
-                output[i] = calculateEncryptedChar(message[i]);
-            }
-
-            return output;
-        }
-
-        public String decrypt(long[] cipher)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            long multiInverse = calculateMultiplierModuloInverse();
-
-            foreach (long element in cipher)
-            {
-                long encryptedChar = (multiInverse * element) % keyGen.modulus;
-                stringBuilder.Append(decryptChar(encryptedChar));
-            }
-
-            return stringBuilder.ToString();
-        }
-
-        public char decryptChar(long encryptedChar)
-        {
-            int MSB = 0x80;
-            int outputChar = 0;
-            for (int i = 7; i >= 0 && encryptedChar > 0; i--)
-            {
-                if (encryptedChar >= privateKey[i])
+                int total = 0;
+                for (int j = 0; j < blockSize; j++)
                 {
-                    encryptedChar -= privateKey[i];
-                    outputChar += MSB;
+                    int bit = binary[i + j] == '1' ? 1 : 0;
+                    total += bit * (int)publicKey[j];
                 }
-                MSB /= 2;
+
+                if (cipher.Length > 0) cipher.Append(",");
+                cipher.Append(total);
             }
-            return (char)outputChar;
+
+            return cipher.ToString();
         }
 
-        public long calculateMultiplierModuloInverse()
+        public string Decrypt(string cipher)
         {
-            long[] response = extendedEuclid(keyGen.multiplier, keyGen.modulus);
-            return response[0];
-        }
+            string[] parts = cipher.Split(',');
+            StringBuilder bits = new StringBuilder();
+            long inverse = calculateMultiplierModuloInverse();
 
-        public long[] extendedEuclid(long c, long d) {
-            if (d == 0)
+            foreach (var part in parts)
             {
-                return new long[] {1,0};
+                long c = long.Parse(part);
+                long value = (c * inverse) % keyGen.modulus;
+                bits.Append(DecryptBits(value));
             }
-            long[] response = extendedEuclid(d, c % d);
-            long a = response[1];
-            long b = response[0] - (c / d) * response[1];
-            return new long[] {a,b};
+
+            return ConvertFromBinary(bits.ToString());
         }
 
-        public long calculateEncryptedChar(char x)
+        private string ConvertToBinary(string message)
         {
-            long output = 0;
-            int val = x;
-            for (int i = 0; i < 8; i++)
+            StringBuilder binary = new StringBuilder();
+            foreach (char c in message)
             {
-                if ((val & 1) == 1)
+                binary.Append(Convert.ToString(c, 2).PadLeft(8, '0'));
+            }
+            return binary.ToString();
+        }
+
+        private string ConvertFromBinary(string bits)
+        {
+            StringBuilder text = new StringBuilder();
+            for (int i = 0; i + 8 <= bits.Length; i += 8)
+            {
+                string byteStr = bits.Substring(i, 8);
+                int ascii = Convert.ToInt32(byteStr, 2);
+                text.Append((char)ascii);
+            }
+            return text.ToString();
+        }
+
+        private string DecryptBits(long value)
+        {
+            char[] bits = new char[blockSize];
+            for (int i = blockSize - 1; i >= 0; i--)
+            {
+                if (value >= privateKey[i])
                 {
-                    output += publicKey[i];
+                    bits[i] = '1';
+                    value -= privateKey[i];
                 }
-                val >>= 1;
+                else
+                {
+                    bits[i] = '0';
+                }
             }
-            return output;
+            return new string(bits);
         }
 
+        private long calculateMultiplierModuloInverse()
+        {
+            long[] result = extendedEuclid(keyGen.multiplier, keyGen.modulus);
+            long inverse = result[0];
+            return (inverse % keyGen.modulus + keyGen.modulus) % keyGen.modulus;
+        }
+
+        private long[] extendedEuclid(long a, long b)
+        {
+            if (b == 0) return new long[] { 1, 0 };
+            long[] vals = extendedEuclid(b, a % b);
+            return new long[] { vals[1], vals[0] - (a / b) * vals[1] };
+        }
     }
 }
