@@ -1,4 +1,7 @@
-﻿using System;
+﻿//Jakub Gawrysiak - 252935
+//Dawid Gradowski - 251524
+
+using System;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -8,35 +11,32 @@ namespace MHCipherUI
 {
     public class MHCipherForm : Form
     {
-        // ============================
-        //  Sekcja: Klucze
-        // ============================
+        // Sekcja: Klucze
         private Label labelPrivateKey;
         private Label labelPublicKey;
         private Label labelMultiplier;
         private Label labelModulus;
+        private Label labelKeySize;
 
         private TextBox textBoxPrivateKey;
         private TextBox textBoxPublicKey;
         private TextBox textBoxMultiplier;
         private TextBox textBoxModulus;
+        private TextBox textBoxKeySize;
 
         private Button buttonGenerateKeys;
         private Button buttonLoadKeys;
         private Button buttonSaveKeys;
+        private Button buttonUpdatePublicKey;
 
-        // ============================
-        //  Sekcja: Szyfrowanie / Deszyfrowanie
-        // ============================
+        // Sekcja: Szyfrowanie / Deszyfrowanie
         private Label labelPlainText;
         private Label labelCipherText;
-
         private TextBox textBoxPlainText;
         private TextBox textBoxCipherText;
 
         private Button buttonEncrypt;
         private Button buttonDecrypt;
-
         private Button buttonSavePlainText;
         private Button buttonSaveCipherText;
         private Button buttonLoadPlainText;
@@ -46,6 +46,12 @@ namespace MHCipherUI
         private RadioButton radioTextMode;
         private RadioButton radioBinaryMode;
         private Label labelModeInfo;
+
+        // Format wyświetlania szyfrogramu
+        private RadioButton radioFormatBinary;
+        private RadioButton radioFormatHex;
+        private RadioButton radioFormatNumeric;
+        private GroupBox groupBoxFormat;
 
         // Dane binarne
         private byte[] binaryPlainData;
@@ -68,146 +74,155 @@ namespace MHCipherUI
         {
             // Ustawienia głównego okna
             this.Text = "Algorytm Plecakowy (Merkle-Hellman)";
-            this.Size = new Size(900, 700);
+            this.Size = new Size(900, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
 
-            // ============================
-            //  Inicjalizacja kontrolek (Klucze)
-            // ============================
-            labelPrivateKey = new Label { Text = "Klucz prywatny:", AutoSize = true, Location = new Point(20, 20) };
+            // Sekcja: Klucze
+            labelKeySize = new Label { Text = "Rozmiar klucza:", AutoSize = true, Location = new Point(20, 20) };
+            textBoxKeySize = new TextBox { Width = 50, Location = new Point(120, 20), Text = "8" };
+
+            labelPrivateKey = new Label { Text = "Klucz prywatny:", AutoSize = true, Location = new Point(20, 50) };
             textBoxPrivateKey = new TextBox
             {
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Width = 350,
                 Height = 60,
-                Location = new Point(140, 20)
+                Location = new Point(120, 50)
             };
 
-            labelPublicKey = new Label { Text = "Klucz publiczny:", AutoSize = true, Location = new Point(20, 90) };
+            labelPublicKey = new Label { Text = "Klucz publiczny:", AutoSize = true, Location = new Point(20, 120) };
             textBoxPublicKey = new TextBox
             {
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Width = 350,
                 Height = 60,
-                Location = new Point(140, 90)
+                Location = new Point(120, 120)
             };
 
-            labelMultiplier = new Label { Text = "Mnożnik:", AutoSize = true, Location = new Point(20, 160) };
-            textBoxMultiplier = new TextBox { Width = 100, Location = new Point(140, 160) };
+            labelMultiplier = new Label { Text = "Mnożnik:", AutoSize = true, Location = new Point(20, 190) };
+            textBoxMultiplier = new TextBox { Width = 100, Location = new Point(120, 190) };
 
-            labelModulus = new Label { Text = "Modulus:", AutoSize = true, Location = new Point(240, 160) };
-            textBoxModulus = new TextBox { Width = 100, Location = new Point(320, 160) };
+            labelModulus = new Label { Text = "Modulus:", AutoSize = true, Location = new Point(230, 190) };
+            textBoxModulus = new TextBox { Width = 100, Location = new Point(300, 190) };
 
             buttonGenerateKeys = new Button { Text = "Generuj nowe klucze", Width = 150, Location = new Point(500, 20) };
-            buttonLoadKeys = new Button { Text = "Wczytaj klucze", Width = 150, Location = new Point(500, 60) };
-            buttonSaveKeys = new Button { Text = "Zapisz klucze", Width = 150, Location = new Point(500, 100) };
+            buttonUpdatePublicKey = new Button { Text = "Aktualizuj klucz publiczny", Width = 150, Location = new Point(500, 60) };
+            buttonLoadKeys = new Button { Text = "Wczytaj klucze", Width = 150, Location = new Point(500, 100) };
+            buttonSaveKeys = new Button { Text = "Zapisz klucze", Width = 150, Location = new Point(500, 140) };
 
-            // ============================
-            //  Inicjalizacja kontrolek (Szyfrowanie/Deszyfrowanie)
-            // ============================
-            labelPlainText = new Label { Text = "Tekst jawny:", AutoSize = true, Location = new Point(20, 200) };
+            // Sekcja: Szyfrowanie/Deszyfrowanie
+            labelPlainText = new Label { Text = "Tekst jawny:", AutoSize = true, Location = new Point(20, 230) };
             textBoxPlainText = new TextBox
             {
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Width = 350,
                 Height = 150,
-                Location = new Point(140, 200)
+                Location = new Point(120, 230)
             };
 
-            labelCipherText = new Label { Text = "Tekst zaszyfrowany:", AutoSize = true, Location = new Point(20, 400) };
+            labelCipherText = new Label { Text = "Szyfrogram:", AutoSize = true, Location = new Point(20, 430) };
             textBoxCipherText = new TextBox
             {
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Width = 350,
                 Height = 150,
-                Location = new Point(140, 400)
+                Location = new Point(120, 430)
             };
 
-            buttonEncrypt = new Button { Text = "Szyfruj >>", Width = 100, Location = new Point(500, 250) };
-            buttonDecrypt = new Button { Text = "<< Deszyfruj", Width = 100, Location = new Point(500, 290) };
+            buttonEncrypt = new Button { Text = "Szyfruj >>", Width = 100, Location = new Point(500, 280) };
+            buttonDecrypt = new Button { Text = "<< Deszyfruj", Width = 100, Location = new Point(500, 320) };
 
-            buttonLoadPlainText = new Button { Text = "Wczytaj", Width = 80, Location = new Point(140, 360) };
-            buttonSavePlainText = new Button { Text = "Zapisz", Width = 80, Location = new Point(210, 360) };
+            buttonLoadPlainText = new Button { Text = "Wczytaj", Width = 80, Location = new Point(120, 390) };
+            buttonSavePlainText = new Button { Text = "Zapisz", Width = 80, Location = new Point(210, 390) };
 
-            buttonLoadCipherText = new Button { Text = "Wczytaj", Width = 80, Location = new Point(140, 560) };
-            buttonSaveCipherText = new Button { Text = "Zapisz", Width = 80, Location = new Point(210, 560) };
+            buttonLoadCipherText = new Button { Text = "Wczytaj", Width = 80, Location = new Point(120, 590) };
+            buttonSaveCipherText = new Button { Text = "Zapisz", Width = 80, Location = new Point(210, 590) };
 
             // Tryb pracy
-            radioTextMode = new RadioButton { Text = "Tryb tekstowy", AutoSize = true, Checked = true, Location = new Point(500, 200) };
-            radioBinaryMode = new RadioButton { Text = "Tryb binarny", AutoSize = true, Location = new Point(500, 220) };
+            radioTextMode = new RadioButton { Text = "Tryb tekstowy", AutoSize = true, Checked = true, Location = new Point(500, 230) };
+            radioBinaryMode = new RadioButton { Text = "Tryb binarny", AutoSize = true, Location = new Point(500, 250) };
             labelModeInfo = new Label
             {
                 Text = "Tryb tekstowy - dla tekstu. Tryb binarny - dla dowolnych plików.",
                 AutoSize = true,
-                Location = new Point(500, 180)
+                Location = new Point(500, 200)
             };
 
-            // Dodawanie wszystkich kontrolek do okna
-            this.Controls.Add(labelPrivateKey);
-            this.Controls.Add(textBoxPrivateKey);
-            this.Controls.Add(labelPublicKey);
-            this.Controls.Add(textBoxPublicKey);
-            this.Controls.Add(labelMultiplier);
-            this.Controls.Add(textBoxMultiplier);
-            this.Controls.Add(labelModulus);
-            this.Controls.Add(textBoxModulus);
-            this.Controls.Add(buttonGenerateKeys);
-            this.Controls.Add(buttonLoadKeys);
-            this.Controls.Add(buttonSaveKeys);
+            // Format wyświetlania szyfrogramu
+            groupBoxFormat = new GroupBox
+            {
+                Text = "Format szyfrogramu",
+                Location = new Point(500, 360),
+                Size = new Size(150, 100)
+            };
 
-            this.Controls.Add(labelPlainText);
-            this.Controls.Add(textBoxPlainText);
-            this.Controls.Add(labelCipherText);
-            this.Controls.Add(textBoxCipherText);
+            radioFormatBinary = new RadioButton { Text = "Binarny", AutoSize = true, Location = new Point(10, 20) };
+            radioFormatHex = new RadioButton { Text = "HEX", AutoSize = true, Location = new Point(10, 40), Checked = true };
+            radioFormatNumeric = new RadioButton { Text = "Liczbowy", AutoSize = true, Location = new Point(10, 60) };
 
-            this.Controls.Add(buttonEncrypt);
-            this.Controls.Add(buttonDecrypt);
+            groupBoxFormat.Controls.Add(radioFormatBinary);
+            groupBoxFormat.Controls.Add(radioFormatHex);
+            groupBoxFormat.Controls.Add(radioFormatNumeric);
 
-            this.Controls.Add(buttonLoadPlainText);
-            this.Controls.Add(buttonSavePlainText);
-            this.Controls.Add(buttonLoadCipherText);
-            this.Controls.Add(buttonSaveCipherText);
-
-            this.Controls.Add(radioTextMode);
-            this.Controls.Add(radioBinaryMode);
-            this.Controls.Add(labelModeInfo);
+            // Dodawanie kontrolek
+            this.Controls.AddRange(new Control[] {
+                labelKeySize, textBoxKeySize,
+                labelPrivateKey, textBoxPrivateKey,
+                labelPublicKey, textBoxPublicKey,
+                labelMultiplier, textBoxMultiplier,
+                labelModulus, textBoxModulus,
+                buttonGenerateKeys, buttonUpdatePublicKey,
+                buttonLoadKeys, buttonSaveKeys,
+                labelPlainText, textBoxPlainText,
+                labelCipherText, textBoxCipherText,
+                buttonEncrypt, buttonDecrypt,
+                buttonLoadPlainText, buttonSavePlainText,
+                buttonLoadCipherText, buttonSaveCipherText,
+                radioTextMode, radioBinaryMode, labelModeInfo,
+                groupBoxFormat
+            });
         }
 
         private void AttachEventHandlers()
         {
-            // Klucze
             buttonGenerateKeys.Click += (s, e) => GenerateNewKeys();
+            buttonUpdatePublicKey.Click += (s, e) => UpdatePublicKey();
             buttonLoadKeys.Click += (s, e) => LoadKeys();
             buttonSaveKeys.Click += (s, e) => SaveKeys();
 
-            // Tekst
             buttonLoadPlainText.Click += (s, e) => OpenFile(textBoxPlainText, ref binaryPlainData);
             buttonSavePlainText.Click += (s, e) => SaveFile(textBoxPlainText, binaryPlainData);
             buttonLoadCipherText.Click += (s, e) => OpenFile(textBoxCipherText, ref binaryCipherData);
             buttonSaveCipherText.Click += (s, e) => SaveFile(textBoxCipherText, binaryCipherData);
 
-            // Szyfrowanie / Deszyfrowanie
             buttonEncrypt.Click += (s, e) =>
             {
-                if (radioTextMode.Checked) EncryptText();
-                else EncryptBinary();
+                if (radioTextMode.Checked)
+                    EncryptText();
+                else
+                    EncryptBinary();
             };
 
             buttonDecrypt.Click += (s, e) =>
             {
-                if (radioTextMode.Checked) DecryptText();
-                else DecryptBinary();
+                if (radioTextMode.Checked)
+                    DecryptText();
+                else
+                    DecryptBinary();
             };
 
-            // Tryb pracy
             radioTextMode.CheckedChanged += (s, e) => UpdateMode();
             radioBinaryMode.CheckedChanged += (s, e) => UpdateMode();
+
+            radioFormatBinary.CheckedChanged += (s, e) => UpdateCipherTextDisplay();
+            radioFormatHex.CheckedChanged += (s, e) => UpdateCipherTextDisplay();
+            radioFormatNumeric.CheckedChanged += (s, e) => UpdateCipherTextDisplay();
         }
 
         private void UpdateMode()
@@ -215,22 +230,74 @@ namespace MHCipherUI
             if (radioTextMode.Checked)
             {
                 textBoxPlainText.Text = "Wprowadź tekst jawny...";
-                textBoxCipherText.Text = "Zaszyfrowany tekst w HEX...";
+                textBoxCipherText.Text = "Zaszyfrowany tekst...";
                 textBoxPlainText.Enabled = true;
             }
             else
             {
                 textBoxPlainText.Text = "[Dane binarne - użyj przycisku 'Wczytaj']";
-                textBoxCipherText.Text = "[Dane binarne zaszyfrowane - HEX]";
+                textBoxCipherText.Text = "[Dane binarne zaszyfrowane]";
                 textBoxPlainText.Enabled = false;
             }
+        }
+
+        private void UpdateCipherTextDisplay()
+        {
+            if (binaryCipherData == null || binaryCipherData.Length == 0)
+                return;
+
+            string originalText = Encoding.UTF8.GetString(binaryCipherData);
+
+            if (radioFormatBinary.Checked)
+            {
+                // Zachowaj przecinki, resztę zamień na binarny
+                string[] parts = originalText.Split(',');
+                StringBuilder result = new StringBuilder();
+                foreach (string part in parts)
+                {
+                    if (result.Length > 0) result.Append(",");
+                    byte[] partBytes = Encoding.UTF8.GetBytes(part);
+                    result.Append(ConvertToBinaryString(partBytes));
+                }
+                textBoxCipherText.Text = result.ToString();
+            }
+            else if (radioFormatHex.Checked)
+            {
+                // Zachowaj przecinki, resztę zamień na HEX
+                string[] parts = originalText.Split(',');
+                StringBuilder result = new StringBuilder();
+                foreach (string part in parts)
+                {
+                    if (result.Length > 0) result.Append(",");
+                    byte[] partBytes = Encoding.UTF8.GetBytes(part);
+                    result.Append(BitConverter.ToString(partBytes).Replace("-", " "));
+                }
+                textBoxCipherText.Text = result.ToString();
+            }
+            else if (radioFormatNumeric.Checked)
+            {
+                // Tryb liczbowy - oryginalny tekst z przecinkami
+                textBoxCipherText.Text = originalText;
+            }
+        }
+
+        private string ConvertToBinaryString(byte[] data)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in data)
+            {
+                sb.Append(Convert.ToString(b, 2).PadLeft(8, '0') + " ");
+            }
+            return sb.ToString().Trim();
         }
 
         private void GenerateNewKeys()
         {
             try
             {
+                int keySize = int.Parse(textBoxKeySize.Text);
                 long multiplier, modulus;
+
                 if (long.TryParse(textBoxMultiplier.Text, out multiplier) &&
                     long.TryParse(textBoxModulus.Text, out modulus))
                 {
@@ -241,9 +308,19 @@ namespace MHCipherUI
                     keyGenerator = new SimpleKeyGenerator();
                 }
 
-                long[] privateKey = keyGenerator.generateDefaultPrivateKey();
-                long[] publicKey = keyGenerator.generatePublicKey(privateKey);
+                // Wygeneruj klucz prywatny o żądanej długości
+                long[] privateKey = new long[keySize];
+                Random rand = new Random();
+                long sum = 0;
 
+                for (int i = 0; i < keySize; i++)
+                {
+                    long next = sum + rand.Next(1, 10);
+                    privateKey[i] = next;
+                    sum += next;
+                }
+
+                long[] publicKey = keyGenerator.generatePublicKey(privateKey);
                 mhCipher = new MHCipher(keyGenerator, privateKey);
 
                 UpdateKeyTextBoxes(privateKey, publicKey);
@@ -252,6 +329,27 @@ namespace MHCipherUI
             catch (Exception ex)
             {
                 MessageBox.Show($"Błąd podczas generowania kluczy: {ex.Message}");
+            }
+        }
+
+        private void UpdatePublicKey()
+        {
+            try
+            {
+                long[] privateKey = Array.ConvertAll(textBoxPrivateKey.Text.Split(','), long.Parse);
+                long multiplier = long.Parse(textBoxMultiplier.Text);
+                long modulus = long.Parse(textBoxModulus.Text);
+
+                keyGenerator = new SimpleKeyGenerator(multiplier, modulus);
+                long[] publicKey = keyGenerator.generatePublicKey(privateKey);
+                textBoxPublicKey.Text = string.Join(", ", publicKey);
+
+                mhCipher = new MHCipher(keyGenerator, privateKey);
+                MessageBox.Show("Klucz publiczny został zaktualizowany!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd podczas aktualizacji klucza publicznego: {ex.Message}");
             }
         }
 
@@ -284,7 +382,6 @@ namespace MHCipherUI
                             textBoxMultiplier.Text = lines[2];
                             textBoxModulus.Text = lines[3];
 
-                            // Reinitialize cipher with loaded keys
                             long[] privateKey = Array.ConvertAll(lines[0].Split(','), long.Parse);
                             keyGenerator = new SimpleKeyGenerator(
                                 long.Parse(lines[2]),
@@ -349,8 +446,7 @@ namespace MHCipherUI
                             }
                             else
                             {
-                                // Dla szyfrogramu pokazujemy HEX
-                                targetTextBox.Text = BitConverter.ToString(binaryData).Replace("-", " ");
+                                UpdateCipherTextDisplay();
                             }
                         }
                     }
@@ -401,9 +497,8 @@ namespace MHCipherUI
                 string plainText = textBoxPlainText.Text;
                 string cipherText = mhCipher.Encrypt(plainText);
 
-                // Konwersja na format HEX
-                byte[] cipherBytes = Encoding.UTF8.GetBytes(cipherText);
-                textBoxCipherText.Text = BitConverter.ToString(cipherBytes).Replace("-", " ");
+                binaryCipherData = Encoding.UTF8.GetBytes(cipherText);
+                UpdateCipherTextDisplay();
             }
             catch (Exception ex)
             {
@@ -415,15 +510,7 @@ namespace MHCipherUI
         {
             try
             {
-                // Konwersja z HEX na string
-                string hexString = textBoxCipherText.Text.Replace(" ", "");
-                byte[] cipherBytes = new byte[hexString.Length / 2];
-                for (int i = 0; i < cipherBytes.Length; i++)
-                {
-                    cipherBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
-                }
-                string cipherText = Encoding.UTF8.GetString(cipherBytes);
-
+                string cipherText = textBoxCipherText.Text;
                 string plainText = mhCipher.Decrypt(cipherText);
                 textBoxPlainText.Text = plainText;
             }
@@ -443,14 +530,11 @@ namespace MHCipherUI
                     return;
                 }
 
-                // Konwersja bajtów na string (Base64) i szyfrowanie
                 string base64PlainText = Convert.ToBase64String(binaryPlainData);
                 string cipherText = mhCipher.Encrypt(base64PlainText);
 
-                // Konwersja wyniku na bajty i zapis
                 binaryCipherData = Encoding.UTF8.GetBytes(cipherText);
-                textBoxCipherText.Text = BitConverter.ToString(binaryCipherData).Replace("-", " ");
-
+                UpdateCipherTextDisplay();
                 MessageBox.Show("Plik został zaszyfrowany pomyślnie!");
             }
             catch (Exception ex)
@@ -465,7 +549,6 @@ namespace MHCipherUI
             {
                 if (binaryCipherData == null || binaryCipherData.Length == 0)
                 {
-                    // Spróbuj przekonwertować z HEX, jeśli nie ma danych binarnych
                     string hexString = textBoxCipherText.Text.Replace(" ", "");
                     binaryCipherData = new byte[hexString.Length / 2];
                     for (int i = 0; i < binaryCipherData.Length; i++)
@@ -474,14 +557,11 @@ namespace MHCipherUI
                     }
                 }
 
-                // Konwersja bajtów na string i deszyfrowanie
                 string cipherText = Encoding.UTF8.GetString(binaryCipherData);
                 string base64PlainText = mhCipher.Decrypt(cipherText);
 
-                // Konwersja Base64 z powrotem na bajty
                 binaryPlainData = Convert.FromBase64String(base64PlainText);
                 textBoxPlainText.Text = $"[Odszyfrowane dane binarne - rozmiar: {binaryPlainData.Length} bajtów]";
-
                 MessageBox.Show("Plik został odszyfrowany pomyślnie!");
             }
             catch (Exception ex)

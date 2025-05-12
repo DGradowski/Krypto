@@ -1,4 +1,7 @@
-﻿namespace Algorithm
+﻿//Jakub Gawrysiak - 252935
+//Dawid Gradowski - 251524
+
+namespace Algorithm
 {
     public class SimpleKeyGenerator
     {
@@ -18,15 +21,20 @@
             this.modulus = modulus;
         }
 
-        public long[] generateDefaultPrivateKey()
+        public long[] generateDefaultPrivateKey(int KeySize)
         {
             long[] newPrivateKey = new long[keySize];
-            long keyElement = 1;
-            for (int i = 0; i < newPrivateKey.Length; i++)
+            Random rand = new Random();
+            long sum = 0;
+
+            for (int i = 0; i < keySize; i++)
             {
-                keyElement *= 2;
-                newPrivateKey[i] = keyElement;
+                // Każdy kolejny element większy niż suma wszystkich poprzednich
+                long next = sum + rand.Next(1, 10); // Możesz zmienić 10 na większą wartość dla większych odstępów
+                newPrivateKey[i] = next;
+                sum += next;
             }
+
             return newPrivateKey;
         }
 
