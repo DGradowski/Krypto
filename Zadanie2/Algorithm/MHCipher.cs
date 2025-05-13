@@ -1,7 +1,4 @@
-﻿//Jakub Gawrysiak - 252935
-//Dawid Gradowski - 251524
-
-using System;
+﻿using System;
 using System.Text;
 
 namespace Algorithm
@@ -24,36 +21,40 @@ namespace Algorithm
         public string Encrypt(string message)
         {
             string binary = ConvertToBinary(message);
-            while (binary.Length % blockSize != 0) binary += "0";
+
+            while (binary.Length % blockSize != 0)
+                binary += "0";
 
             StringBuilder cipher = new StringBuilder();
             for (int i = 0; i < binary.Length; i += blockSize)
             {
-                long total = 0;
+                int total = 0;
                 for (int j = 0; j < blockSize; j++)
-                    total += (binary[i + j] == '1' ? 1 : 0) * publicKey[j];
+                {
+                    int bit = binary[i + j] == '1' ? 1 : 0;
+                    total += bit * (int)publicKey[j];
+                }
 
                 if (cipher.Length > 0) cipher.Append(",");
-                cipher.Append(total.ToString());
+                cipher.Append(total);
             }
+
             return cipher.ToString();
         }
 
         public string Decrypt(string cipher)
         {
-            // Usuwamy wszystkie spacje przed przetwarzaniem
-            string cipherWithoutSpaces = cipher.Replace(" ", "");
-            int partLength = publicKey.Length.ToString().Length;
+            string[] parts = cipher.Split(',');
             StringBuilder bits = new StringBuilder();
             long inverse = calculateMultiplierModuloInverse();
 
-            for (int i = 0; i < cipherWithoutSpaces.Length; i += partLength)
+            foreach (var part in parts)
             {
-                string part = cipherWithoutSpaces.Substring(i, Math.Min(partLength, cipherWithoutSpaces.Length - i));
                 long c = long.Parse(part);
                 long value = (c * inverse) % keyGen.modulus;
                 bits.Append(DecryptBits(value));
             }
+
             return ConvertFromBinary(bits.ToString());
         }
 
@@ -61,7 +62,9 @@ namespace Algorithm
         {
             StringBuilder binary = new StringBuilder();
             foreach (char c in message)
+            {
                 binary.Append(Convert.ToString(c, 2).PadLeft(8, '0'));
+            }
             return binary.ToString();
         }
 
@@ -70,7 +73,9 @@ namespace Algorithm
             StringBuilder text = new StringBuilder();
             for (int i = 0; i + 8 <= bits.Length; i += 8)
             {
-                text.Append((char)Convert.ToInt32(bits.Substring(i, 8), 2));
+                string byteStr = bits.Substring(i, 8);
+                int ascii = Convert.ToInt32(byteStr, 2);
+                text.Append((char)ascii);
             }
             return text.ToString();
         }
@@ -80,8 +85,15 @@ namespace Algorithm
             char[] bits = new char[blockSize];
             for (int i = blockSize - 1; i >= 0; i--)
             {
-                bits[i] = value >= privateKey[i] ? '1' : '0';
-                if (bits[i] == '1') value -= privateKey[i];
+                if (value >= privateKey[i])
+                {
+                    bits[i] = '1';
+                    value -= privateKey[i];
+                }
+                else
+                {
+                    bits[i] = '0';
+                }
             }
             return new string(bits);
         }
@@ -89,7 +101,8 @@ namespace Algorithm
         private long calculateMultiplierModuloInverse()
         {
             long[] result = extendedEuclid(keyGen.multiplier, keyGen.modulus);
-            return (result[0] % keyGen.modulus + keyGen.modulus) % keyGen.modulus;
+            long inverse = result[0];
+            return (inverse % keyGen.modulus + keyGen.modulus) % keyGen.modulus;
         }
 
         private long[] extendedEuclid(long a, long b)

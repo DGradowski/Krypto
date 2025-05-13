@@ -163,11 +163,10 @@ namespace MHCipherUI
             };
 
             radioFormatBinary = new RadioButton { Text = "Binarny", AutoSize = true, Location = new Point(10, 20) };
-            radioFormatHex = new RadioButton { Text = "HEX", AutoSize = true, Location = new Point(10, 40), Checked = true };
-            radioFormatNumeric = new RadioButton { Text = "Liczbowy", AutoSize = true, Location = new Point(10, 60) };
+            radioFormatHex = new RadioButton { Text = "HEX", AutoSize = true, Location = new Point(10, 40) };
+            radioFormatNumeric = new RadioButton { Text = "Liczbowy", AutoSize = true, Location = new Point(10, 60), Checked = true };
 
-            groupBoxFormat.Controls.Add(radioFormatBinary);
-            groupBoxFormat.Controls.Add(radioFormatHex);
+            
             groupBoxFormat.Controls.Add(radioFormatNumeric);
 
             // Dodawanie kontrolek
@@ -220,8 +219,7 @@ namespace MHCipherUI
             radioTextMode.CheckedChanged += (s, e) => UpdateMode();
             radioBinaryMode.CheckedChanged += (s, e) => UpdateMode();
 
-            radioFormatBinary.CheckedChanged += (s, e) => UpdateCipherTextDisplay();
-            radioFormatHex.CheckedChanged += (s, e) => UpdateCipherTextDisplay();
+            
             radioFormatNumeric.CheckedChanged += (s, e) => UpdateCipherTextDisplay();
         }
 
